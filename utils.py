@@ -1,11 +1,10 @@
-
+import io
 import numpy as np
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from PIL import Image
 import matplotlib.pyplot as plt
-import flask as Flask
 import json
 
 # data transforms
@@ -56,7 +55,6 @@ class ConvNet(nn.Module):
 			nn.ReLU(),
 			nn.Dropout(0.1),
 			nn.Linear(64, self.n_classes),
-			# (n + 2p -f)/s + 1
 		)
 			
 	def forward(self, x):
@@ -102,9 +100,18 @@ class ImageClassPredict:
 
 
 	def load_image(self, image_path):
-		image = Image.open(image_path).convert('RGB')  # Load the image using PIL and convert to RGB
-		image = self.image_transformer(image)  # Apply data transformations
-		return image
+		# image = Image.open(image_path).convert('RGB')  # Load the image using PIL and convert to RGB
+		if(type(image_path) == 'str'):
+			with open(image_path, 'rb') as f:
+				image_bytes = f.read()
+			image = Image.open(io.BytesIO(image_bytes))
+			image = self.image_transformer(image)  # Apply data transformations
+			return image
+		else:
+			image = Image.open(io.BytesIO(image_path))
+			return self.image_transformer(image)
+
+
 
 
 	def infer(self):
@@ -118,18 +125,21 @@ class ImageClassPredict:
 		return class_list[str(prediction)]
 
 
+def predict_class(image):
+	prediction = ImageClassPredict(ConvNet(), model_path, image).infer()
+	return prediction
 
 # Image path
-img_path = 'data/plantvillage/Squash___Powdery_mildew/01b116bb-2e4a-461a-a772-f7be4a255e31___MD_Powd.M 9996.JPG'
+# img_path = 'data/plantvillage/Squash___Powdery_mildew/01b116bb-2e4a-461a-a772-f7be4a255e31___MD_Powd.M 9996.JPG'
 
 # Initialize the predictor with the model
-prediction = ImageClassPredict(ConvNet(), model_path, img_path).infer()
+# prediction = predict_class(img_path)
 
-print(prediction)
-# Plot the image
-im = Image.open(img_path)
-plt.figure(figsize=(4, 4))
-plt.imshow(im)
-plt.title(f'Class: {prediction}')
-plt.axis('off')
-plt.show()
+# print(prediction)
+# # Plot the image
+# im = Image.open(img_path)
+# plt.figure(figsize=(4, 4))
+# plt.imshow(im)
+# plt.title(f'Class: {prediction}')
+# plt.axis('off')
+# plt.show()
