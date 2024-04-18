@@ -15,7 +15,7 @@ def predict():
 		file = request.files['file']
 		image_byte = file.read()
 		prediction = predict_class(image_byte)
-		return jsonify({'prediction': prediction}) 
+		return jsonify({'prediction': prediction})
 		
 	else:
 		return "Please upload an image"
